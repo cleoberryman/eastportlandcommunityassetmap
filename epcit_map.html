@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Display a map with a custom style</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <style>
+        #menu {
+            background: #ffffff;
+            position: absolute;
+            z-index: 1;
+            top: 0px;
+            left: 0px;
+            border-radius: 3px;
+            width: 200px;
+            border: 1px solid rgba(0, 0, 0, 0.4);
+            font-family:'Arial Narrow Bold', 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+        }
+        #title {
+            background: #ffffff;
+            position: absolute;
+            z-index: 1;
+            top: 0px;
+            right: 0px;
+            border-radius: 3px;
+            width: 200px;
+            border: 1px solid rgba(0, 0, 0, 0.4);
+            font-family:'Arial Narrow Bold', 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+        }
+
+
+        #menu a {
+            font-size: 13px;
+            color: #aeaeae;
+            display: block;
+            margin: 0;
+            padding: 0px;
+            padding: 16px;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+            text-align: left;
+        }
+
+        #menu a:last-child {
+            border: none;
+        }
+
+        #menu a:hover {
+            background-color: #79c7ff;
+            color: #404040;
+        }
+
+        #menu a.active {
+            background-color: #3887be;
+            color: #ffffff;
+        }
+
+        #menu a.active:hover {
+            background: #79c7ff;
+        }
+    .title_control {
+        background-color: #ffffff;
+        top: 0px;
+        right: 0px;
+        padding: 0px;
+        padding: 10px;
+        border-radius: 3px;
+            width: 350px;
+            border: 1px solid rgba(0, 0, 0, 0.4);
+    }
+    </style>
+
+    <nav id="menu"></nav>
+    <div id="map"></div>
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoiY2xlb2JlcnJ5bWFuIiwiYSI6ImNsamwzbjFyNDBvc3AzbHFnZzM0Yzl5bjQifQ.dvv7hub1B-n9XImBzNod-g';
+        const map = new mapboxgl.Map({
+            container: 'map', // container ID
+            style: 'mapbox://styles/cleoberryman/cljylju5a001501ondupp2lo2', // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
+            center: [-122.502452, 45.512452], // starting position
+            zoom: 12 // starting zoom
+        });
+        class LegendControl {
+      onAdd(map) {
+        this._map = map;
+        this._container = document.createElement('div');
+        this._container.className = 'legend_control';
+        this._container.innerHTML = "<img src='https://i.postimg.cc/vT9fXLcT/icons-cutout.png'>";
+
+        return this._container;
+      }
+
+      onRemove() {
+        this._container.parentNode.removeChild(this._container);
+        this._map = undefined;
+      }
+    }
+
+    map.addControl(new LegendControl(), 'top-left');
+
+    class TitleControl {
+      onAdd(map) {
+        this._map = map;
+        this._container = document.createElement('div');
+        this._container.className = 'title_control';
+        this._container.innerHTML = "<h2>East Portland Community Asset Map</h2><p><b>Powered by MercyCorps</b></p><p></p><p>Welcome to the East Portland Community Investment Trust (EPCIT) Community Asset Map!</p><p>- Get information on any community asset by simply clicking its icon on the map. Points that share the same address (i.e. 2 investors in a household) will display information on each asset when clicked.</p><p>- Select what types of assets are visible on the map by clicking their catagory in the legend on the left. The legend entry for each asset is highlighted in blue when the asset type is visible, as opposed to white when the group is hidden. All asset types are visible by default when the map loads.</p><p>- Points on the map cluster together as you zoom out to keep the map uncluttered. Zoom in on a specific area to see all of its assets.</p><p>- Click the search icon in the bottom right corner of the map to search for a specific address or asset by name.</p><p>- Click the ruler icon to measure the distance between any two points on the map. Select a start and then an end point for the measurment by clicking their locations on the map.</p><p><b>Software attribution:</b> Mapbox GL JS, Mapbox Studio, Microsoft Excel, Microsoft VS Code, QGIS</p><p><b>Data attribution:</b> CIT Investor Portal, CCD Public/Private School Data (NCES), Esri, Exempt Organizations Business Master File Extract (IRS), Low-Income Housing Tax Credit Property Level Data (HUD), OpenStreetMap</p><p><h5>Updated July 2023</h5></p>";
+
+        return this._container;
+      }
+
+      onRemove() {
+        this._container.parentNode.removeChild(this._container);
+        this._map = undefined;
+      }
+    }
+
+    map.addControl(new TitleControl(), 'top-right');
+        /* 
+Add an event listener that runs
+when a user clicks on the map element.
+*/
+        map.on('click', (event) => {
+            // If the user clicked on one of your markers, get its information.
+            const features = map.queryRenderedFeatures(event.point, {
+                layers: ['CIT'] // replace with your layer name
+            });
+            if (!features.length) {
+                return;
+            }
+            const feature = features[0];
+            const name = "Plaza 122";
+
+
+            /* 
+        Create a popup, specify its options 
+        and properties, and add it to the map.
+      */
+            const popup = new mapboxgl.Popup({ offset: [0, -15] })
+                .setLngLat(feature.geometry.coordinates)
+                .setHTML(
+                    `<h3>${name}</h3>`
+                )
+
+
+                .addTo(map);
+        });
+        /* 
+Add an event listener that runs
+  when a user clicks on the map element.
+*/
+        map.on('click', (event) => {
+            // If the user clicked on one of your markers, get its information.
+            const features = map.queryRenderedFeatures(event.point, {
+                layers: ['Affordable Housing'] // replace with your layer name
+            });
+            if (!features.length) {
+                return;
+            }
+            const feature = features[0];
+            const name = feature.properties.project;
+            const address = feature.properties.address;
+            const zip = feature.properties.zip;
+            const n_units = feature.properties.n_units;
+
+            /* 
+        Create a popup, specify its options 
+        and properties, and add it to the map.
+      */
+            const popup = new mapboxgl.Popup({ offset: [0, -15] })
+                .setLngLat(feature.geometry.coordinates)
+                .setHTML(
+                    `<h3>${name}</h3><p><b>Address: </b>${address}</p><p><b>Zip Code: </b>${zip}</p><p><b>Number of Units: </b>${n_units}</p>`
+                )
+
+
+                .addTo(map);
+        });
+        /* 
+Add an event listener that runs
+when a user clicks on the map element.
+*/
+        map.on('click', (event) => {
+            // If the user clicked on one of your markers, get its information.
+            const features = map.queryRenderedFeatures(event.point, {
+                layers: ['Community Space'] // replace with your layer name
+            });
+            if (!features.length) {
+                return;
+            }
+            const feature = features[0];
+            const name = feature.properties.name;
+            const house = feature.properties.addr_house;
+            const street = feature.properties.addr_stree;
+            const unit = feature.properties.addr_unit;
+            const city = feature.properties.addr_city;
+            const state = feature.properties.addr_state;
+            const zip = feature.properties.addr_postc;
+            const phone = feature.properties.phone;
+            const website = feature.properties.website;
+
+
+            /* 
+        Create a popup, specify its options 
+        and properties, and add it to the map.
+      */
+            const popup = new mapboxgl.Popup({ offset: [0, -15] })
+                .setLngLat(feature.geometry.coordinates)
+                .setHTML(
+                    `<h3>${name}</h3><p><b>Address: </b>${house}</p><p><b>Street: </b>${street}</p><p><b>Unit: </b>${unit}</p><p><b>Zip Code: </b>${zip}</p><p><b>Phone: </b>${phone}</p><p><b>Website: </b><a>${website}</a>`
+                )
+                .addTo(map);
+
+        });
+        /* 
+Add an event listener that runs
+when a user clicks on the map element.
+*/
+        map.on('click', (event) => {
+            // If the user clicked on one of your markers, get its information.
+            const features = map.queryRenderedFeatures(event.point, {
+                layers: ['Place of Worship'] // replace with your layer name
+            });
+            if (!features.length) {
+                return;
+            }
+            const feature = features[0];
+            const name = feature.properties.NAME;
+            const address = feature.properties.STREET;
+            const zip = feature.properties.ZIP;
+
+            /* 
+        Create a popup, specify its options 
+        and properties, and add it to the map.
+      */
+            const popup = new mapboxgl.Popup({ offset: [0, -15] })
+                .setLngLat(feature.geometry.coordinates)
+                .setHTML(
+                    `<h3>${name}</h3><p><b>Address: </b>${address}</p><p><b>Zip Code: </b>${zip}</p>`
+                )
+                .addTo(map);
+
+        });
+        /* 
+Add an event listener that runs
+when a user clicks on the map element.
+*/
+        map.on('click', (event) => {
+            // If the user clicked on one of your markers, get its information.
+            const features = map.queryRenderedFeatures(event.point, {
+                layers: ['Grocery Store'] // replace with your layer name
+            });
+            if (!features.length) {
+                return;
+            }
+            const feature = features[0];
+            const name = feature.properties.name;
+            const house = feature.properties.addr_house;
+            const street = feature.properties.addr_stree;
+            const zip = feature.properties.addr_postc;
+            const phone = feature.properties.phone;
+            const website = feature.properties.website;
+
+            /* 
+        Create a popup, specify its options 
+        and properties, and add it to the map.
+      */
+            const popup = new mapboxgl.Popup({ offset: [0, -15] })
+                .setLngLat(feature.geometry.coordinates)
+                .setHTML(
+                    `<h3>${name}</h3><p><b>Address: </b>${house}</p><p><b>Street: </b>${street}</p><p><b>Zip Code: </b>${zip}</p><p><b>Phone: </b>${phone}</p><p><b>Website: </b>${website}</p>`
+                )
+                .addTo(map);
+
+        });
+        /* 
+Add an event listener that runs
+when a user clicks on the map element.
+*/
+        map.on('click', (event) => {
+            // If the user clicked on one of your markers, get its information.
+            const features = map.queryRenderedFeatures(event.point, {
+                layers: ['Medical Practice'] // replace with your layer name
+            });
+            if (!features.length) {
+                return;
+            }
+            const feature = features[0];
+            const name = feature.properties.name;
+            const house = feature.properties.addr_house;
+            const street = feature.properties.addr_stree;
+            const unit = feature.properties.addr_unit;
+            const zip = feature.properties.addr_postc;
+            const type = feature.properties.amenity;
+            const phone = feature.properties.phone;
+            const website = feature.properties.website;
+
+            /* 
+        Create a popup, specify its options 
+        and properties, and add it to the map.
+      */
+            const popup = new mapboxgl.Popup({ offset: [0, -15] })
+                .setLngLat(feature.geometry.coordinates)
+                .setHTML(
+                    `<h3>${name}</h3><p><b>Address: </b>${house}</p><p><b>Street: </b>${street}</p><p><b>Unit: </b>${unit}</p><p><b>Zip Code: </b>${zip}</p><p><b>Type: </b>${type}</p><p><b>Phone: </b>${phone}</p><p><b>Website: </b>${website}</p>`
+                )
+                .addTo(map);
+
+        });
+        /* 
+Add an event listener that runs
+when a user clicks on the map element.
+*/
+        map.on('click', (event) => {
+            // If the user clicked on one of your markers, get its information.
+            const features = map.queryRenderedFeatures(event.point, {
+                layers: ['Nonprofit'] // replace with your layer name
+            });
+            if (!features.length) {
+                return;
+            }
+            const feature = features[0];
+            const name = feature.properties.NAME;
+            const address = feature.properties.STREET;
+            const zip = feature.properties.ZIP;
+
+            /* 
+        Create a popup, specify its options 
+        and properties, and add it to the map.
+      */
+            const popup = new mapboxgl.Popup({ offset: [0, -15] })
+                .setLngLat(feature.geometry.coordinates)
+                .setHTML(
+                    `<h3>${name}</h3><p><b>Address: </b>${address}</p><p><b>Zip Code: </b>${zip}</p>`
+                )
+                .addTo(map);
+        });
+        /* 
+Add an event listener that runs
+when a user clicks on the map element.
+*/
+        map.on('click', (event) => {
+            // If the user clicked on one of your markers, get its information.
+            const features = map.queryRenderedFeatures(event.point, {
+                layers: ['School'] // replace with your layer name
+            });
+            if (!features.length) {
+                return;
+            }
+            const feature = features[0];
+            const name = feature.properties.Name;
+            const address = feature.properties.Address;
+            const zip = feature.properties.ZIP;
+            const lograde = feature.properties.Low;
+            const higrade = feature.properties.High;
+            const charter = feature.properties.Charter;
+            const private = feature.properties.Private;
+            const enrollment = feature.properties.Students;
+            const ratio = feature.properties.Ratio;
+            const phone = feature.properties.Phone;
+
+            /* 
+        Create a popup, specify its options 
+        and properties, and add it to the map.
+      */
+            const popup = new mapboxgl.Popup({ offset: [0, -15] })
+                .setLngLat(feature.geometry.coordinates)
+                .setHTML(
+                    `<h3>${name}</h3><p><b>Address: </b>${address}</p><p><b>Zip Code: </b>${zip}</p><p><b>Grades: </b>${lograde} to ${higrade}</p><p><b>Charter: </b>${charter}</p><p><b>Private: </b>${private}</p><p><b>Enrollment: </b>${enrollment}</p><p><b>Student/Teacher Ratio: </b>${ratio}</p><p><b>Phone: </b>${phone}</p>`
+                )
+                .addTo(map);
+
+        });
+        /* 
+Add an event listener that runs
+when a user clicks on the map element.
+*/
+        map.on('click', (event) => {
+            // If the user clicked on one of your markers, get its information.
+            const features = map.queryRenderedFeatures(event.point, {
+                layers: ['Investor - Active'] // replace with your layer name
+            });
+            if (!features.length) {
+                return;
+            }
+            const feature = features[0];
+            const investor = feature.properties.Investor;
+            const address = feature.properties.Address;
+            const unit = feature.properties.Unit;
+            const zip = feature.properties.Zip;
+            const neighborhood = feature.properties.Neighborhood;
+            const age = feature.properties.Age;
+            const dob = feature.properties.DOB;
+            const language = feature.properties.Language;
+            const email = feature.properties.Email;
+            const phone = feature.properties.Phone;
+            const contact = feature.properties.Contact;
+            const entry = feature.properties.Entry;
+            const avg_investment = feature.properties.Avg_Investment;
+            const status = feature.properties.Status;
+            const notes = feature.properties.Notes;
+
+            /* 
+        Create a popup, specify its options 
+        and properties, and add it to the map.
+      */
+            const popup = new mapboxgl.Popup({ offset: [0, -15] })
+                .setLngLat(feature.geometry.coordinates)
+                .setHTML(
+                    `<h3>${investor}</h3><p><b>Address: </b>${address}</p><p><b>Unit: </b>${unit}</p><p><b>Zip Code: </b>${zip}</p><p><b>Neighborhood: </b>${neighborhood}</p><p><b>Age: </b>${age}</p><p><b>DOB: </b>${dob}</p><p><b>Native Language: </b>${language}</p><p><b>Email: </b>${email}</p><p><b>Phone: </b>${phone}</p><p><b>In Contact With: </b>${contact}</p><p><b>Year of Entry: </b>${entry}</p><p><b>Average Monthly Investment: </b>${avg_investment}</p><p><b>Investment Status: </b>${status}</p><p><b>Notes: </b>${notes}</p>`
+                )
+                .addTo(map);
+
+        });
+        /* 
+Add an event listener that runs
+when a user clicks on the map element.
+*/
+        map.on('click', (event) => {
+            // If the user clicked on one of your markers, get its information.
+            const features = map.queryRenderedFeatures(event.point, {
+                layers: ['Investor - Passive'] // replace with your layer name
+            });
+            if (!features.length) {
+                return;
+            }
+            const feature = features[0];
+            const investor = feature.properties.Investor;
+            const address = feature.properties.Address;
+            const unit = feature.properties.Unit;
+            const zip = feature.properties.Zip;
+            const neighborhood = feature.properties.Neighborhood;
+            const age = feature.properties.Age;
+            const dob = feature.properties.DOB;
+            const language = feature.properties.Language;
+            const email = feature.properties.Email;
+            const phone = feature.properties.Phone;
+            const contact = feature.properties.Contact;
+            const entry = feature.properties.Entry;
+            const avg_investment = feature.properties.Avg_Investment;
+            const status = feature.properties.Status;
+            const notes = feature.properties.Notes;
+
+            /* 
+        Create a popup, specify its options 
+        and properties, and add it to the map.
+      */
+            const popup = new mapboxgl.Popup({ offset: [0, -15] })
+                .setLngLat(feature.geometry.coordinates)
+                .setHTML(
+                    `<h3>${investor}</h3><p><b>Address: </b>${address}</p><p><b>Unit: </b>${unit}</p><p><b>Zip Code: </b>${zip}</p><p><b>Neighborhood: </b>${neighborhood}</p><p><b>Age: </b>${age}</p><p><b>DOB: </b>${dob}</p><p><b>Native Language: </b>${language}</p><p><b>Email: </b>${email}</p><p><b>Phone: </b>${phone}</p><p><b>In Contact With: </b>${contact}</p><p><b>Year of Entry: </b>${entry}</p><p><b>Average Monthly Investment: </b>${avg_investment}</p><p><b>Investment Status: </b>${status}</p><p><b>Notes: </b>${notes}</p>`
+                )
+                .addTo(map);
+
+        });
+        /* 
+Add an event listener that runs
+when a user clicks on the map element.
+*/
+        map.on('click', (event) => {
+            // If the user clicked on one of your markers, get its information.
+            const features = map.queryRenderedFeatures(event.point, {
+                layers: ['Restaurant'] // replace with your layer name
+            });
+            if (!features.length) {
+                return;
+            }
+            const feature = features[0];
+            const name = feature.properties.name;
+            const house = feature.properties.addr_house;
+            const street = feature.properties.addr_stree;
+            const unit = feature.properties.addr_unit;
+            const zip = feature.properties.addr_postc;
+            const type = feature.properties.amenity;
+            const cuisine = feature.properties.cuisine;
+            const email = feature.properties.email;
+            const phone = feature.properties.phone;
+            const website = feature.properties.website;
+
+            /* 
+        Create a popup, specify its options 
+        and properties, and add it to the map.
+      */
+            const popup = new mapboxgl.Popup({ offset: [0, -15] })
+                .setLngLat(feature.geometry.coordinates)
+                .setHTML(
+                    `<h3>${name}</h3><p><b>Address: </b>${house}</p><p><b>Street: </b>${street}</p><p><b>Unit: </b>${unit}</p><p><b>Zip Code: </b>${zip}</p><p><b>Type: </b>${type}</p><p><b>Cuisine: </b>${cuisine}</p><p><b>Email: </b>${email}</p><p><b>Phone: </b>${phone}</p><p><b>Website: </b>${website}</p>`
+                )
+                .addTo(map);
+
+        });
+        /* 
+Add an event listener that runs
+when a user clicks on the map element.
+*/
+        map.on('click', (event) => {
+            // If the user clicked on one of your markers, get its information.
+            const features = map.queryRenderedFeatures(event.point, {
+                layers: ['MAX Station'] // replace with your layer name
+            });
+            if (!features.length) {
+                return;
+            }
+            const feature = features[0];
+            const name = feature.properties.name;
+            const network = feature.properties.network;
+
+            /* 
+        Create a popup, specify its options 
+        and properties, and add it to the map.
+      */
+            const popup = new mapboxgl.Popup({ offset: [0, -15] })
+                .setLngLat(feature.geometry.coordinates)
+                .setHTML(
+                    `<h3>${name}</h3><p><b>Operated By: </b>${network}</p>`
+                )
+                .addTo(map);
+
+        });
+        /* 
+Add an event listener that runs
+when a user clicks on the map element.
+*/
+        map.on('click', (event) => {
+            // If the user clicked on one of your markers, get its information.
+            const features = map.queryRenderedFeatures(event.point, {
+                layers: ['Bus Stop'] // replace with your layer name
+            });
+            if (!features.length) {
+                return;
+            }
+            const feature = features[0];
+            const name = feature.properties.name;
+            const network = feature.properties.operator;
+
+            /* 
+        Create a popup, specify its options 
+        and properties, and add it to the map.
+      */
+            const popup = new mapboxgl.Popup({ offset: [0, -15] })
+                .setLngLat(feature.geometry.coordinates)
+                .setHTML(
+                    `<h3>${name}</h3><p><b>Operated By: </b>${network}</p>`
+                )
+                .addTo(map);
+
+        });
+
+        map.on('load', () => {
+            // Set the default atmosphere style
+            map.setFog({});
+        });
+        // Enumerate ids of the layers.
+        const toggleableLayerIds = ['CIT', 'Investor - Active', 'Investor - Passive', 'Affordable Housing', 'Nonprofit', 'School', 'Place of Worship', 'Community Space', 'Medical Practice', 'Restaurant', 'Grocery Store', 'MAX Station', 'Bus Stop'];
+
+        // Set up the corresponding toggle button for each layer.
+        for (const id of toggleableLayerIds) {
+            // Skip layers that already have a button set up.
+            if (document.getElementById(id)) {
+                continue;
+            }
+
+            // Create a link.
+            const link = document.createElement('a');
+            link.id = id;
+            link.href = '#';
+            link.textContent = id;
+            link.className = 'active';
+
+            // Show or hide layer when the toggle is clicked.
+            link.onclick = function (e) {
+                const clickedLayer = this.textContent;
+                e.preventDefault();
+                e.stopPropagation();
+
+                const visibility = map.getLayoutProperty(
+                    clickedLayer,
+                    'visibility'
+                );
+
+                // Toggle layer visibility by changing the layout object's visibility property.
+                if (visibility === 'visible') {
+                    map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+                    this.className = '';
+                } else {
+                    this.className = 'active';
+                    map.setLayoutProperty(
+                        clickedLayer,
+                        'visibility',
+                        'visible'
+                    );
+                }
+            };
+
+            const layers = document.getElementById('menu');
+            layers.appendChild(link);
+        }
+    </script>
+
+</body>
+
+</html>
